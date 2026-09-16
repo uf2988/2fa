@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { readFileSync, writeFileSync } from 'fs';
+import process from 'node:process';
+import { preserveWorkflowsForSync } from './sync-upstream-compat.js';
 
 const [, , localPath, upstreamPath, outputPath] = process.argv;
 
@@ -8,6 +10,10 @@ if (!localPath || !upstreamPath || !outputPath) {
 	console.error('Usage: node scripts/merge-wrangler-config.js <local> <upstream> <output>');
 	process.exit(1);
 }
+
+// Existing workflows execute this downloaded entry point after rsync. Repair any
+// skipped upstream files before reading wrangler.toml, then merge local settings.
+preserveWorkflowsForSync({ localPath, upstreamPath, outputPath });
 
 const local = normalize(readFileSync(localPath, 'utf8'));
 const upstream = normalize(readFileSync(upstreamPath, 'utf8'));
